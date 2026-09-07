@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Copy Desk — Ishwarya Achappa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    /* page */
+    --bg:#FBF6EC;
+    --surface:#FFFFFF;
+    --surface-2:#F3ECDC;
+    --line:#E6DCC3;
+    --ink:#231D17;
+    --ink-soft:#786B58;
+    --ink-faint:#A79A82;
+
+    /* flourish accents (masthead, dividers, sector chart) */
+    --gold:#C6861F;
+    --rust:#C1502E;
+    --plum:#8A5A9E;
+
+    /* Content Desk */
+    --content:#0E7C6B;
+    --content-deep:#0A5C4F;
+    --content-tint:#E5F5F1;
+    --content-tint-2:#D3EEE6;
+
+    /* Ad Desk */
+    --ads:#D9622F;
+    --ads-deep:#A9481F;
+    --ads-tint:#FDEEE3;
+    --ads-tint-2:#FBDDC7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Source Serif 4', Georgia, serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px 90px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    margin-top:36px;
+    padding:52px 32px 34px;
+    text-align:center;
+    border-radius:20px;
+    background:linear-gradient(120deg, var(--content-tint) 0%, var(--bg) 48%, var(--ads-tint) 100%);
+    border:1px solid var(--line);
+  }
+  .eyebrow{
+    display:inline-block;
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:#fff;
+    background:linear-gradient(90deg, var(--content) 0%, var(--ads) 100%);
+    padding:6px 16px;
+    border-radius:999px;
+    margin-bottom:22px;
+  }
+  .masthead h1{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:clamp(40px,6.6vw,78px);
+    letter-spacing:-.01em;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .masthead .role{
+    font-family:'Space Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:26px;
+  }
+  .dateline{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    max-width:900px;
+    margin:0 auto;
+    padding:14px 4px 0;
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.05em;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+  }
+  .dateline span:nth-child(2){color:var(--rust); font-weight:700;}
+
+  /* ---------- Stat strip ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:12px;
+    margin-top:22px;
+  }
+  .stat{
+    padding:22px 14px;
+    text-align:center;
+    border-radius:14px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    box-shadow:0 1px 2px rgba(35,29,23,.04);
+  }
+  .stat .num{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(24px,3.2vw,36px);
+    color:var(--ink);
+    line-height:1;
+  }
+  .stat .lbl{
+    margin-top:8px;
+    font-family:'Space Mono', monospace;
+    font-size:9.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Growth chart card ---------- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px;
+    box-shadow:0 1px 2px rgba(35,29,23,.04);
+  }
+  .chart-box{position:relative; height:300px;}
+
+  /* ---------- Two column ---------- */
+  .two-col{display:grid; grid-template-columns:1.1fr .9fr; gap:18px;}
+  @media(max-width:820px){ .two-col{grid-template-columns:1fr;} .stats{grid-template-columns:repeat(2,1fr);} }
+
+  .index-list{list-style:none; margin:0; padding:0;}
+  .index-list li{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .index-list li:last-child{border-bottom:none;}
+  .index-list .name{color:var(--ink);}
+  .index-list .bar-wrap{
+    flex:1;
+    margin:0 14px;
+    height:7px;
+    background:var(--surface-2);
+    border-radius:999px;
+    position:relative;
+    overflow:hidden;
+  }
+  .index-list .bar{
+    position:absolute; left:0; top:0; bottom:0;
+    background:var(--gold);
+    border-radius:999px;
+  }
+  .index-list .count{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    min-width:32px;
+    text-align:right;
+  }
+
+  /* ---------- Client roster table ---------- */
+  table.roster{width:100%; border-collapse:collapse; font-size:13.5px;}
+  table.roster th{
+    text-align:left;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--line);
+    padding:0 10px 10px 0;
+  }
+  table.roster td{
+    padding:10px 10px 10px 0;
+    border-bottom:1px solid var(--surface-2);
+    vertical-align:middle;
+  }
+  table.roster tr:hover td{background:var(--surface-2);}
+  table.roster .rank{
+    font-family:'Space Mono', monospace;
+    color:var(--rust);
+    font-weight:700;
+    width:30px;
+  }
+  table.roster .client-name{color:var(--ink);}
+  table.roster .sector-tag{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:.03em;
+    color:var(--plum);
+  }
+  table.roster .n{
+    font-family:'Space Mono', monospace;
+    text-align:right;
+    color:var(--ink-soft);
+  }
+  .roster-wrap{max-height:560px; overflow-y:auto;}
+  .roster-wrap::-webkit-scrollbar{width:6px;}
+  .roster-wrap::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+
+  /* ---------- pull quote / narrative strip ---------- */
+  .pull{
+    margin-top:36px;
+    padding:32px 28px;
+    border-radius:16px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    text-align:center;
+  }
+  .pull p{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-style:italic;
+    font-size:clamp(18px,2.2vw,25px);
+    color:var(--ink);
+    max-width:760px;
+    margin:0 auto;
+    line-height:1.45;
+  }
+  .pull .attr{
+    margin-top:14px;
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    background:linear-gradient(90deg, var(--content), var(--ads));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    font-weight:700;
+  }
+
+  footer{
+    margin-top:50px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.05em;
+    color:var(--ink-faint);
+  }
+
+  .legend-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-family:'Space Mono', monospace; font-size:10.5px; color:var(--ink-soft);}
+  .legend-row .dot{display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:6px; vertical-align:middle;}
+
+  .section-sub{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Desk divider ---------- */
+  .desk-divider{
+    margin-top:54px;
+    text-align:center;
+    position:relative;
+  }
+  .desk-divider::before, .desk-divider::after{
+    content:'';
+    position:absolute;
+    top:50%;
+    width:calc(50% - 110px);
+    height:3px;
+    border-radius:2px;
+  }
+  .desk-divider::before{left:0; background:linear-gradient(90deg, transparent, var(--content));}
+  .desk-divider::after{right:0; background:linear-gradient(90deg, var(--ads), transparent);}
+  .desk-divider span{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    background:var(--bg);
+    padding:0 14px;
+  }
+
+  /* ---------- Desk block ---------- */
+  .desk{
+    margin-top:26px;
+    border-radius:20px;
+    background:var(--desk-tint, var(--surface));
+    border:1px solid var(--desk-c, var(--line));
+    overflow:hidden;
+  }
+  .desk-head{
+    padding:22px 28px;
+    background:var(--desk-c);
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .desk-head h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:24px;
+    color:#fff;
+    margin:0;
+  }
+  .desk-head .desk-tag{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#fff;
+    background:rgba(255,255,255,.18);
+    border-radius:999px;
+    padding:4px 12px;
+  }
+  .desk-body{padding:26px 28px 30px;}
+  .desk-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:22px;
+  }
+  .desk-stats .stat{background:var(--surface); border-color:var(--desk-tint-2, var(--line));}
+  .desk-stats .num{color:var(--desk-c);}
+  @media(max-width:820px){ .desk-stats{grid-template-columns:repeat(2,1fr);} }
+
+  .desk .card{border-color:var(--desk-tint-2, var(--line));}
+  .desk .index-list li{border-color:var(--desk-tint-2, var(--line));}
+  .desk .index-list .bar-wrap{background:var(--desk-tint-2, var(--surface-2));}
+  .desk .index-list .bar{background:var(--desk-c);}
+  .desk table.roster .rank{color:var(--desk-c);}
+  .desk table.roster th{border-color:var(--desk-tint-2, var(--line));}
+  .desk table.roster td{border-color:var(--desk-tint-2, var(--surface-2));}
+  .desk table.roster tr:hover td{background:var(--desk-tint-2, var(--surface-2));}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="eyebrow">A Production Record</div>
+    <h1>Ishwarya Achappa</h1>
+    <div class="role">Copy &amp; Content Writer — Shopa Marketing Digital Marketing Agency</div>
+    <div class="dateline">
+      <span id="dl-range">March 2024 — Present</span>
+      <span id="dl-total">1,426 pieces filed</span>
+      <span id="dl-clients">60 mastheads served</span>
+    </div>
+  </div>
+
+  <div class="stats" id="stat-strip"></div>
+
+  <div class="pull">
+    <p id="pullQuote">—</p>
+    <div class="attr">Editor's Note</div>
+  </div>
+
+  <div class="desk-divider"><span>Two Desks, One Byline</span></div>
+
+  <!-- ================= CONTENT DESK ================= -->
+  <div class="desk" id="deskContent" style="--desk-c:#0E7C6B; --desk-tint:#E5F5F1; --desk-tint-2:#CFEEE6;">
+    <div class="desk-head">
+      <h2>The Content Desk</h2>
+      <span class="desk-tag">Blog · Website Content · Reviews</span>
+    </div>
+    <div class="desk-body">
+      <div class="desk-stats" id="contentStats"></div>
+
+      <div class="card" style="margin-bottom:22px;">
+        <div class="chart-box" style="height:240px;"><canvas id="contentChart"></canvas></div>
+        <div class="legend-row" id="contentLegend"></div>
+      </div>
+
+      <div class="two-col" style="margin-bottom:22px;">
+        <div class="card">
+          <div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:16px;">By format</div>
+          <ul class="index-list" id="contentTypeList"></ul>
+        </div>
+        <div class="card">
+          <div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:16px;">By sector</div>
+          <ul class="index-list" id="contentSectorList"></ul>
+        </div>
+      </div>
+
+      <div class="section-sub" style="margin:0 0 12px;">Client roster, ranked by pieces filed.</div>
+      <div class="card roster-wrap" style="max-height:420px;">
+        <table class="roster">
+          <thead><tr><th class="rank">#</th><th>Client</th><th>Sector</th><th style="text-align:right;">Pieces</th></tr></thead>
+          <tbody id="contentRosterBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= AD DESK ================= -->
+  <div class="desk" id="deskAds" style="--desk-c:#D9622F; --desk-tint:#FDEEE3; --desk-tint-2:#FBDCC5;">
+    <div class="desk-head">
+      <h2>The Ad Desk</h2>
+      <span class="desk-tag">AI Max Search &amp; Display Ads</span>
+    </div>
+    <div class="desk-body">
+      <div class="desk-stats" id="adStats"></div>
+
+      <div class="card" style="margin-bottom:22px;">
+        <div class="chart-box" style="height:240px;"><canvas id="adChart"></canvas></div>
+        <div class="legend-row" id="adLegend"></div>
+      </div>
+
+      <div class="two-col" style="margin-bottom:22px;">
+        <div class="card">
+          <div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:16px;">By ad type</div>
+          <ul class="index-list" id="adTypeList"></ul>
+        </div>
+        <div class="card">
+          <div style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:16px;">Top ad clients</div>
+          <ul class="index-list" id="adClientList"></ul>
+        </div>
+      </div>
+
+      <div class="section-sub" style="margin:0 0 12px;">Every business copy was written for, ranked by ad pieces.</div>
+      <div class="card roster-wrap" style="max-height:420px;">
+        <table class="roster">
+          <thead><tr><th class="rank">#</th><th>Business</th><th style="text-align:right;">Pieces</th></tr></thead>
+          <tbody id="adRosterBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Compiled from Shopa Marketing's internal work log, Mar 2024 – present.</span>
+    <span>Client and format counts reflect completed / logged work only.</span>
+  </footer>
+
+</div>
+
+<script>
+// =====================================================================
+// LIVE DATA SOURCE — edit this list as you publish more tabs.
+// Google Sheets: File > Share > Publish to web > pick the tab > CSV > copy link.
+// Add one URL per published tab; the dashboard merges them all.
+// =====================================================================
+const CSV_URLS = [
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFbms-6VuOBiO-IgtCGBkAmtvjUcpjOJ9dVxvet3yOoE820EzsPjztnjuOG7uapINVKtljdZPm0oVm/pub?gid=207019986&single=true&output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFbms-6VuOBiO-IgtCGBkAmtvjUcpjOJ9dVxvet3yOoE820EzsPjztnjuOG7uapINVKtljdZPm0oVm/pub?gid=937300427&single=true&output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFbms-6VuOBiO-IgtCGBkAmtvjUcpjOJ9dVxvet3yOoE820EzsPjztnjuOG7uapINVKtljdZPm0oVm/pub?gid=980463855&single=true&output=csv"
+];
+
+// ---- Static reference maps (client-name cleanup + sector grouping) ----
+const CLIENT_ALIAS = {
+  'Springvole & Richmond Dental Group': 'RS Dental',
+  'RS Dental': 'RS Dental',
+  'Burdel': 'Bur-Del Co-Operative',
+  'Home - Braidwood Advanced Care': 'Braidwood Advanced Care',
+  'Leah Bett Nursing Services': 'Leah Betts Nursing Services',
+  'Early Childhood Education in Dural – Learning Blocks': 'Learning Blocks Dural',
+  'ICS': 'International Commercial Services',
+  '\nInternational Commercial Services': 'International Commercial Services',
+  'SEOOnly': 'SEO Only',
+  'Shopamarketing': 'Shopa Marketing (in-house)',
+  'Shopa Coupon': 'Shopa Marketing (in-house)',
+  'Disability Support Services | We Love Health Services': 'Love Home Nursing',
+  'Podiatry Clinic | Sydney Podiatrist': 'Sydney Podiatry',
+  'Gorgeous Curtain | Curtains': 'Gorgeous Curtains',
+  'NDIS Service Providers in Sydney | Choice Care Australia': 'Choice Care Australia',
+  'BPB Auto': 'BPB Auto',
+  'Accounting & Taxation Services Australia | Bookkeeping, Payroll & Compliance Experts': 'Vedalekha',
+  'Disability Support in Melbourne - Serenity Solutions': 'Serenity Solutions',
+  'Vision Colleges': 'Vision Bible College',
+  'https://keshfinancesolutions.com.au/': 'Kesh – Finance Solution',
+  'Nundah Central Dental Clinic': 'Nundah Central Dental',
+};
+
+const SECTOR_MAP = {
+  'Dental': ['RS Dental','ACAOO','Nundah Central Dental','Sparkling White Dental','Smilexcellence','Parkmore Family Dental'],
+  'Disability Support (NDIS)': ['Clear Care Community','TK Community Care','Dream Big Support Services','All About You Disability Support Services','Cam Can','Accesible & Short Term Accomodation','Serenity Solutions','Home of Choice & Care','Joshua Tree Home Support','Choice Care Australia','Dayaram Care Services'],
+  'Aged & Home Care': ['Bur-Del Co-Operative','Braidwood Advanced Care','Leah Betts Nursing Services','Oasis Garden Village','The Angels','Love Home Nursing'],
+  'Early Childhood Education': ['Beginnings Early Learners','Learning Blocks Dural','Mini Mates','Edu Kids'],
+  'Real Estate': ['Wright Way Realty','Liz Miles Real Estate','Sydney Real Estate Group'],
+  'Solar & Energy': ['SPS Energy'],
+  'Accounting & Tax': ['TaxByte','Vedalekha','Kesh – Finance Solution'],
+  'Retail & Consumer Products': ["Roly's Mobiles",'Austack Saddlery Produce','Apollo Motorcycles & ATV Australia','Simply Braces','Baden Bower'],
+  'Health & Wellness': ['Brisbane South Hypnotherapy','AM Counseling Services','Psych Plus Services','Sydney Podiatry','Radiology Imaging Solutions'],
+  'Legal': ['Visa Tec Legal'],
+  'Automotive': ['BPB Auto'],
+  'Marketing / Agency': ['Shopa Marketing (in-house)','Brand Vantage','SEO Only','Infinity22','International Commercial Services'],
+};
+const CLIENT_TO_SECTOR = {};
+Object.entries(SECTOR_MAP).forEach(([sector, clients]) => clients.forEach(c => CLIENT_TO_SECTOR[c] = sector));
+
+const EXCLUDE_TYPES = new Set(['HOLIDAY','STUDY TIME','SEMRUSH COURSES','#VALUE!','']);
+
+// Ad Desk only tracks these two ad formats — everything else logged in the
+// sheet's Ad Copy columns (plain "Ad copy", "Meta Ad copy", "Audio script", etc.)
+// is left out of the Ad Desk entirely.
+const AD_TYPE_MAP = {
+  'Search Ad copy': 'AI Max Google Search Ads',
+  'Display Ad copy': 'Google Display Ads',
+};
+function normAdType(raw){
+  return AD_TYPE_MAP[(raw || '').trim()] || null;
+}
+
+function normClient(c){
+  if (!c) return c;
+  c = c.trim();
+  return CLIENT_ALIAS[c] || c;
+}
+function sectorOf(c){ return CLIENT_TO_SECTOR[c] || 'Other / Misc'; }
+
+// Parse a date string in either dd.mm.yyyy or (Google-converted) m/d/yyyy form.
+function parseRowDate(s){
+  if (!s) return null;
+  s = s.trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[1]-1, +m[2]); // m/d/yyyy
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+function ymKey(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+
+// ---- Turn parsed CSV rows into the same shape the rest of the page expects ----
+function buildData(rows){
+  const today = new Date();
+  const deliverables = []; // {date, type, client, desk}
+  let lastDate = null;
+
+  for (const row of rows){
+    const rawDate = (row[0] || '').toString();
+    const parsed = parseRowDate(rawDate);
+    if (parsed) lastDate = parsed;
+    const d = lastDate;
+
+    // --- main content block: cols 1-2 = Type, Client ---
+    // "Blog Post" is a rare duplicate label for "Blog" (a couple of stray entries) — folded in here.
+    let type = (row[1] || '').toString().trim();
+    if (type === 'Blog Post') type = 'Blog';
+    const client = normClient((row[2] || '').toString());
+    if (d && client && !EXCLUDE_TYPES.has(type) && type){
+      deliverables.push({date: d, type, client, desk: 'content'});
+    }
+
+    // --- ad copy block: col 9 = Type; client sits in col 10 OR (if that's blank) col 11 —
+    // the original sheet's merged/blank cells shift this by one column in places.
+    // Only Search and Display ad copy count toward the Ad Desk. ---
+    const acType = normAdType(row[9]);
+    const acClientRaw = (row[10] || '').toString().trim() || (row[11] || '').toString().trim();
+    const acClient = normClient(acClientRaw);
+    if (d && acClient && acType){
+      deliverables.push({date: d, type: acType, client: acClient, desk: 'ads'});
+    }
+  }
+
+  const dated = deliverables.filter(r => r.date <= today);
+
+  function aggregate(list){
+    const type_counts = {}, sector_counts = {}, monthly = {}, yearly = {}, client_counts = {}, client_sector = {};
+    for (const r of list){
+      type_counts[r.type] = (type_counts[r.type]||0) + 1;
+      const sec = sectorOf(r.client);
+      sector_counts[sec] = (sector_counts[sec]||0) + 1;
+      client_sector[r.client] = sec;
+      client_counts[r.client] = (client_counts[r.client]||0) + 1;
+      const ym = ymKey(r.date);
+      monthly[ym] = (monthly[ym]||0) + 1;
+      const yr = String(r.date.getFullYear());
+      yearly[yr] = (yearly[yr]||0) + 1;
+    }
+    const top_clients = Object.entries(client_counts).sort((a,b)=>b[1]-a[1]);
+    return {
+      total: list.length,
+      unique_clients: Object.keys(client_counts).length,
+      type_counts, sector_counts,
+      yearly,
+      monthly: Object.fromEntries(Object.entries(monthly).sort()),
+      top_clients,
+      client_sector
+    };
+  }
+
+  const contentRows = dated.filter(r => r.desk === 'content');
+  const adRows = dated.filter(r => r.desk === 'ads');
+
+  return {
+    content: aggregate(contentRows),
+    ads: aggregate(adRows),
+    total: dated.length,
+    unique_clients: new Set(dated.map(r=>r.client)).size
+  };
+}
+
+async function fetchAndParseAll(urls){
+  const allRows = [];
+  const cacheBuster = Date.now(); // forces a fresh copy every page load, bypassing browser + CDN caches
+  for (const url of urls){
+    const sep = url.includes('?') ? '&' : '?';
+    const bustUrl = url + sep + '_=' + cacheBuster;
+    const res = await fetch(bustUrl, {cache: 'no-store'});
+    if (!res.ok) throw new Error('Could not load sheet (' + res.status + '): ' + url);
+    const text = await res.text();
+    const parsed = Papa.parse(text.trim(), {skipEmptyLines: false});
+    // Drop the two header rows (section header + column header) from each sheet.
+    allRows.push(...parsed.data.slice(2));
+  }
+  return allRows;
+}
+
+let DATA = null;
+
+const SECTOR_COLORS = {
+  'Marketing / Agency':'#C1502E',
+  'Disability Support (NDIS)':'#C6861F',
+  'Dental':'#0E7C6B',
+  'Other / Misc':'#A79A82',
+  'Aged & Home Care':'#8A5A9E',
+  'Accounting & Tax':'#3B7EA1',
+  'Health & Wellness':'#C0538A',
+  'Real Estate':'#B07A2E',
+  'Retail & Consumer Products':'#5F9E5C',
+  'Early Childhood Education':'#D4699A',
+  'Solar & Energy':'#DDA321',
+  'Legal':'#786B58',
+  'Automotive':'#8C8272'
+};
+
+const YEAR_COLORS = {'2024':'#0E7C6B','2025':'#C6861F','2026':'#D9622F'};
+const TYPE_LABELS = {'Blog':'Blog Posts','Website Content':'Website Content','Blog Content Review':'Blog Content Review','Website Content Review':'Website Content Review'};
+
+function fmt(n){ return n.toLocaleString('en-US'); }
+
+// Renders one desk's stat strip, chart, format/sector-or-client lists and roster table.
+// `deskAccent` tints the monthly bars a single flat colour (desks don't carry a
+// multi-year story the way the masthead total does, so one colour per desk reads cleaner).
+function renderDesk(d, ids, deskAccent, opts){
+  const months = Object.keys(d.monthly).sort();
+  const monthsActive = months.length;
+  const y = d.yearly;
+  const currentYear = String(new Date().getFullYear());
+  const currentMonthNum = new Date().getMonth() + 1;
+
+  const strip = [
+    {num: fmt(d.total), lbl: opts.totalLabel},
+    {num: d.unique_clients, lbl: opts.clientsLabel},
+    {num: monthsActive, lbl:'Months Active'},
+    {num: (y[currentYear] ? (y[currentYear]/currentMonthNum).toFixed(0) : '—'), lbl:`Avg / Month, ${currentYear}`}
+  ];
+  document.getElementById(ids.stats).innerHTML = strip.map(s=>`<div class="stat"><div class="num">${s.num}</div><div class="lbl">${s.lbl}</div></div>`).join('');
+
+  // Format / type breakdown
+  const typeOrder = Object.entries(d.type_counts).sort((a,b)=>b[1]-a[1]);
+  const typeMax = typeOrder.length ? typeOrder[0][1] : 1;
+  document.getElementById(ids.typeList).innerHTML = typeOrder.map(([t,c])=>`
+    <li><span class="name">${TYPE_LABELS[t]||t}</span>
+    <span class="bar-wrap"><span class="bar" style="width:${(c/typeMax*100).toFixed(0)}%"></span></span>
+    <span class="count">${fmt(c)}</span></li>
+  `).join('');
+
+  // Second list: sector breakdown for content desk, top clients for ad desk
+  if (ids.secondList){
+    let secondOrder;
+    if (opts.secondListMode === 'sector'){
+      secondOrder = Object.entries(d.sector_counts).filter(([s])=>s!=='Other / Misc').sort((a,b)=>b[1]-a[1]);
+      if (d.sector_counts['Other / Misc']) secondOrder.push(['Other / Misc', d.sector_counts['Other / Misc']]);
+    } else {
+      secondOrder = d.top_clients.slice(0, 8);
+    }
+    const secondMax = secondOrder.length ? Math.max(...secondOrder.map(x=>x[1])) : 1;
+    document.getElementById(ids.secondList).innerHTML = secondOrder.map(([s,c])=>`
+      <li><span class="name">${s}</span>
+      <span class="bar-wrap"><span class="bar" style="width:${(c/secondMax*100).toFixed(0)}%; ${opts.secondListMode==='sector' ? 'background:'+(SECTOR_COLORS[s]||'#888') : ''}"></span></span>
+      <span class="count">${fmt(c)}</span></li>
+    `).join('');
+  }
+
+  // Roster table
+  const rosterBody = document.getElementById(ids.roster);
+  rosterBody.innerHTML = d.top_clients.map((row,i)=>{
+    const [client, count] = row;
+    if (opts.rosterHasSector){
+      const sector = d.client_sector[client] || 'Other / Misc';
+      return `<tr><td class="rank">${i+1}</td><td class="client-name">${client}</td><td class="sector-tag">${sector}</td><td class="n">${count}</td></tr>`;
+    }
+    return `<tr><td class="rank">${i+1}</td><td class="client-name">${client}</td><td class="n">${count}</td></tr>`;
+  }).join('');
+
+  // Chart
+  try{
+    const monthLabels = months.map(m=>{
+      const [yr,mo] = m.split('-');
+      const dd = new Date(parseInt(yr), parseInt(mo)-1, 1);
+      return dd.toLocaleDateString('en-US',{month:'short'}) + " '" + yr.slice(2);
+    });
+    const monthVals = months.map(m=>d.monthly[m]);
+    if (typeof Chart === 'undefined') throw new Error('Chart.js failed to load');
+
+    new Chart(document.getElementById(ids.chart), {
+      type:'bar',
+      data:{ labels: monthLabels, datasets:[{ data: monthVals, backgroundColor: deskAccent, borderRadius:4, maxBarThickness:20 }] },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ backgroundColor:'#231D17', titleColor:'#FBF6EC', bodyColor:'#FBF6EC', borderColor: deskAccent, borderWidth:1,
+            callbacks:{ label: (ctx)=> ctx.parsed.y + ' pieces' } }
+        },
+        scales:{
+          x:{ ticks:{ color:'#786B58', font:{family:"'Space Mono', monospace", size:9.5}, maxRotation:0, autoSkip:true, maxTicksLimit:14 }, grid:{ display:false } },
+          y:{ ticks:{ color:'#786B58', font:{family:"'Space Mono', monospace", size:10} }, grid:{ color:'#E6DCC3' }, beginAtZero:true }
+        }
+      }
+    });
+  } catch(err){
+    document.getElementById(ids.chart).closest('.chart-box').innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:\'Space Mono\',monospace;font-size:12px;color:#786B58;">Chart failed to load: ' + err.message + '</div>';
+  }
+
+  return {months, y, monthsActive, currentYear, currentMonthNum};
+}
+
+function render(data){
+  DATA = data;
+  const overallTotal = data.total;
+  const overallClients = data.unique_clients;
+
+  // ---- Dateline (whole-desk totals) ----
+  document.getElementById('dl-total').textContent = fmt(overallTotal) + ' pieces filed';
+  document.getElementById('dl-clients').textContent = overallClients + ' mastheads served';
+
+  // ---- Top stat strip (combined) ----
+  const allSectors = new Set([...Object.keys(data.content.sector_counts)].filter(s=>s!=='Other / Misc'));
+  const strip = [
+    {num: fmt(overallTotal), lbl:'Total Pieces Filed'},
+    {num: overallClients, lbl:'Clients & Businesses Served'},
+    {num: fmt(data.content.total), lbl:'Editorial Pieces'},
+    {num: fmt(data.ads.total), lbl:'Ad Copy Pieces'},
+    {num: allSectors.size, lbl:'Industry Sectors'}
+  ];
+  document.getElementById('stat-strip').innerHTML = strip.map(s=>`<div class="stat"><div class="num">${s.num}</div><div class="lbl">${s.lbl}</div></div>`).join('');
+
+  // ---- Content desk ----
+  const cMeta = renderDesk(data.content, {
+    stats:'contentStats', typeList:'contentTypeList', secondList:'contentSectorList',
+    roster:'contentRosterBody', chart:'contentChart'
+  }, '#0E7C6B', { totalLabel:'Editorial Pieces', clientsLabel:'Clients Served', secondListMode:'sector', rosterHasSector:true });
+  document.getElementById('contentLegend').innerHTML =
+    `<span><span class="dot" style="background:#0E7C6B"></span>Blog &amp; website content, plus their reviews</span>`;
+
+  // ---- Ad desk ----
+  const aMeta = renderDesk(data.ads, {
+    stats:'adStats', typeList:'adTypeList', secondList:'adClientList',
+    roster:'adRosterBody', chart:'adChart'
+  }, '#D9622F', { totalLabel:'Ad Copy Pieces', clientsLabel:'Businesses Served', secondListMode:'clients', rosterHasSector:false });
+  document.getElementById('adLegend').innerHTML =
+    `<span><span class="dot" style="background:#D9622F"></span>AI Max Google Search Ads &amp; Google Display Ads only — client + one-off local business briefs</span>`;
+
+  // ---- Pull quote (whole-desk) ----
+  const firstYear = Object.keys({...data.content.yearly, ...data.ads.yearly}).sort()[0];
+  document.getElementById('pullQuote').textContent =
+    `Across ${cMeta.monthsActive} months on the desk, ${fmt(overallTotal)} pieces have gone out — ${fmt(data.content.total)} blog posts and web pages for ${data.content.unique_clients} clients, plus ${fmt(data.ads.total)} ad copy briefs for ${data.ads.unique_clients} businesses, from NDIS providers to dental clinics to real estate firms.`;
+}
+
+function showError(message){
+  document.getElementById('dl-total').textContent = 'Could not load live data';
+  document.getElementById('stat-strip').innerHTML =
+    `<div class="stat" style="grid-column: 1 / -1;"><div class="lbl" style="color:#C1502E; font-size:12px;">${message}</div></div>`;
+}
+
+// ---- Boot: fetch the published sheet(s), compute, render ----
+(async function init(){
+  try{
+    if (typeof Papa === 'undefined') throw new Error('CSV parser failed to load');
+    const rawRows = await fetchAndParseAll(CSV_URLS);
+    const data = buildData(rawRows);
+    render(data);
+  } catch(err){
+    showError('Live data fetch failed: ' + err.message + ' — check the CSV_URLS in the page source, and that the sheet is still published.');
+  }
+})();
+</script>
+</body>
+</html>
